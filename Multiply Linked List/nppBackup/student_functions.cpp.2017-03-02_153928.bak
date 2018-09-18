@@ -1,0 +1,50 @@
+#include <fstream>
+#include <iostream>
+#include <string>
+#include "SongLibrary.h"
+
+//////////////////DO NOT CHANGE THIS CODE////////////////////////
+
+//Construct a Song object with values
+Song::Song(const std::string& title, const std::string& artist, 
+     const std::string& album, unsigned int year){
+	this->title = title;
+	this->artist = artist;
+	this->album = album;
+	this->year = year;
+	used = false;
+	this->song_group_ptr = NULL;
+}
+
+//Song equality doesn't depend on pointers or being used
+bool operator== (const Song& s1, const Song& s2){
+	return (s1.getYear() == s2.getYear()) && (s1.getTitle() == s2.getTitle())
+          && (s1.getAlbum() == s2.getAlbum()) && (s1.getArtist() == s2.getArtist());
+}
+
+//Modifier for group pointer
+void Song::updateSongGroupPointer(SongGroupNode* ptr){
+	if(ptr){
+		//Check that ptr is actually for this Song.
+		assert(ptr->m_song->value == *this); 
+		song_group_ptr = ptr;
+	}
+	else{
+		song_group_ptr = NULL;
+	}
+}
+
+//Make output easier by overload operator<<
+std::ostream& operator<< (std::ostream& ostr, const Song& song){
+	if(!song.getSongGroupPointer()){
+		ostr << "\"" << song.getTitle() << "\" by " << song.getArtist() << " on \"" 
+	       << song.getAlbum() << "\" (" << song.getYear() << ")" << std::endl;
+	}
+	else{
+		ostr << "\"" << song.getTitle() << "\" by " << song.getArtist() << " on \"" 
+		<< song.getAlbum() << "\" (" << song.getYear() << ")" << " in Song Group "
+		<< song.getSongGroupPointer()->id << std::endl;
+	}
+	return ostr;
+}
+

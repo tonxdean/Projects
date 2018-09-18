@@ -1,0 +1,575 @@
+#include <fstream>
+#include <iostream>
+#include <string>
+#include "SongLibrary.h"
+
+//////////////////DO NOT CHANGE THIS CODE////////////////////////
+
+//Construct a Song object with values
+Song::Song(const std::string& title, const std::string& artist, 
+     const std::string& album, unsigned int year){
+	this->title = title;
+	this->artist = artist;
+	this->album = album;
+	this->year = year;
+	used = false;
+	this->song_group_ptr = NULL;
+}
+
+//Song equality doesn't depend on pointers or being used
+bool operator== (const Song& s1, const Song& s2){
+	return (s1.getYear() == s2.getYear()) && (s1.getTitle() == s2.getTitle())
+          && (s1.getAlbum() == s2.getAlbum()) && (s1.getArtist() == s2.getArtist());
+}
+
+//Modifier for group pointer
+void Song::updateSongGroupPointer(SongGroupNode* ptr){
+	if(ptr){
+		//Check that ptr is actually for this Song.
+		assert(ptr->m_song->value == *this); 
+		song_group_ptr = ptr;
+	}
+	else{
+		song_group_ptr = NULL;
+	}
+}
+
+//Make output easier by overload operator<<
+std::ostream& operator<< (std::ostream& ostr, const Song& song){
+	if(!song.getSongGroupPointer()){
+		ostr << "\"" << song.getTitle() << "\" by " << song.getArtist() << " on \"" 
+	       << song.getAlbum() << "\" (" << song.getYear() << ")" << std::endl;
+	}
+	else{
+		ostr << "\"" << song.getTitle() << "\" by " << song.getArtist() << " on \"" 
+		<< song.getAlbum() << "\" (" << song.getYear() << ")" << " in Song Group "
+		<< song.getSongGroupPointer()->id << std::endl;
+	}
+	return ostr;
+}
+
+/////////////////////////YOUR CODE STARTS HERE/////////////////////////////////
+
+void DeleteSongGroup(SongGroupNode*& group);
+//////////////////////////////GROUP FUNCTIONS/////////////////////////////////
+
+/*
+ARGUMENTS:
+-song_groups points to a singly-linked list of song group heads
+-id is the ID of the list we are searching for
+BEHAVIOR:
+None
+RETURN:
+NULL if no list matches the ID, otherwise returns the GroupListNode* containing
+the head of the list with ID id.
+*/
+GroupListNode* GroupExists(GroupListNode* song_groups, GroupID id)
+{
+	if(!song_groups)
+	{
+		return NULL;
+	}
+	GroupListNode* temp = song_groups;
+	while(temp)
+	{
+		if(temp->value->id == id)
+		{
+			return temp;
+		}
+		else
+		{
+			temp=temp->ptr;
+		}
+	}
+	return NULL;
+}
+
+/*
+ARGUMENTS:
+-song_groups points to a singly-linked list of song group heads
+-id is the ID of the list we are creating
+BEHAVIOR:
+Add a new song group to song_groups, give the new song group ID id. Order of
+song groups is not guaranteed.
+RETURN:
+None
+*/
+void MakeGroup(GroupListNode*& song_groups, GroupID id)
+{
+	
+	GroupListNode* temp = song_groups;
+	if(temp==NULL)
+	{
+		song_groups = new GroupListNode;
+		song_groups->ptr = NULL;
+		song_groups->value = new SongGroupNode;
+		song_groups->value->m_song = NULL;
+		song_groups->value->next_song_ptr = NULL;
+		song_groups->value->prev_song_ptr =NULL;
+		song_groups->value->next_by_artist_ptr = NULL;
+		song_groups->value->prev_by_year_ptr=NULL;
+		song_groups->value->id=id;
+	}
+	else
+	{
+		while(temp->ptr)
+		{
+			temp = temp->ptr;
+		}
+		temp ->ptr = new GroupListNode;
+		temp = temp->ptr;	
+	
+
+	temp->ptr = NULL;
+	temp->value = new SongGroupNode;
+	temp->value->m_song = NULL;
+	temp->value->next_song_ptr = NULL;
+	temp->value->prev_song_ptr =NULL;
+	temp->value->next_by_artist_ptr = NULL;
+	temp->value->prev_by_year_ptr=NULL;
+	temp->value->id=id;
+	}
+	
+}
+
+
+/*
+ARGUMENTS:
+-group_head points to the head of a song group
+-song is the Song we are checking the group for
+BEHAVIOR:
+None
+RETURN:
+If song is found in the group return true. If song is not found,
+return false.
+*/
+bool SongInGroup(SongGroupNode* group_head, const Song& song)
+{
+	SongGroupNode* current = group_head;
+	if(group_head==NULL)
+	{
+		return false;
+	}
+	while(current!=NULL)
+	{
+		if(current->m_song==NULL)
+		{
+			return false;
+		}
+		if(current->m_song->value == song)
+		{
+			return true;
+		}
+		current = current->next_song_ptr;
+	}
+
+	return false;
+}
+/*
+ARGUMENTS:
+-library_ptr points to the LibraryNode* containing the Song we want to add.
+-list_ptr is the head of the song group we want to add the song to.
+BEHAVIOR:
+Modify the group pointed to by list_ptr to reflect that the song is in the group.
+This may change the length of the list. Modifies the Song's members as well.
+RETURN:
+None
+*/
+void AddToGroup(LibraryNode* library_ptr, GroupListNode* list_ptr)
+{
+	
+	SongGroupNode* current = list_ptr->value;
+	SongGroupNode* prevByArt = NULL;
+	GroupID id = current->id;
+	if(!SongInGroup(list_ptr->value,library_ptr->value))
+	{
+		if(current->m_song==NULL)
+		{
+			current->m_song=library_ptr;
+			library_ptr->value.setUsedInGroup(true);
+			library_ptr->value.updateSongGroupPointer(current); 
+
+			
+		}
+		else if(current->next_song_ptr==NULL&&current->prev_song_ptr==NULL)
+		{ 
+			current->next_song_ptr = new SongGroupNode;
+			SongGroupNode* prev = current;
+			current = current->next_song_ptr;
+			current->m_song = library_ptr;
+			current->next_song_ptr = NULL;
+			current->prev_song_ptr = prev;
+			current->prev_by_year_ptr = NULL;
+			current->id = id;
+			if(prev->m_song->value.getArtist()==current->m_song->value.getArtist())
+			{
+				prev->next_by_artist_ptr=current;
+			}
+			current->next_by_artist_ptr = NULL;
+			library_ptr->value.setUsedInGroup(true);
+			library_ptr->value.updateSongGroupPointer(current);
+		}
+		else
+		{
+			while(current->next_song_ptr)
+			{
+				current=current->next_song_ptr;
+				if(library_ptr->value.getArtist()==current->m_song->value.getArtist())
+				{
+					prevByArt = current;
+				}
+			}
+			current->next_song_ptr = new SongGroupNode;
+			SongGroupNode* prev = current;
+			current = current->next_song_ptr;
+			current->m_song = library_ptr;
+			current ->id = id;
+			current->next_song_ptr = NULL;
+			current->prev_song_ptr = prev;
+			current->prev_by_year_ptr = NULL;
+			if(prev->m_song->value.getArtist()==current->m_song->value.getArtist())
+			{
+				prev->next_by_artist_ptr=current;
+			}
+			current->next_by_artist_ptr = prevByArt;
+			library_ptr->value.setUsedInGroup(true);
+			library_ptr->value.updateSongGroupPointer(current); 
+			
+		}
+		
+		RecomputePrevByYear(list_ptr);
+	}
+	
+}
+
+/*
+ARGUMENTS:
+-library_ptr points to the LibraryNode* containing the Song we want to remove from a group.
+-song_groups points to a singly-linked list of song group heads
+BEHAVIOR:
+Modifies the Song's member variables to reflect that it is not in a group. Modifies the group
+so that the Song is not in the group. This function may cause song_groups to be modified as well.
+RETURN:
+None
+*/
+void RemoveFromGroup(LibraryNode* library_ptr, GroupListNode* song_groups)
+{
+	if(library_ptr->value.getSongGroupPointer()!=NULL&&SongInGroup(library_ptr->value.getSongGroupPointer(),library_ptr->value))
+	{
+		SongGroupNode* current = library_ptr->value.getSongGroupPointer();
+		GroupListNode* current_head = song_groups;
+		while(current_head->value!=current&&current_head->ptr!=NULL)
+		{
+			current_head = current_head->ptr;
+		}
+		if(current->next_song_ptr==NULL&&current->prev_song_ptr==NULL)
+		{
+			current->m_song=NULL;
+			library_ptr->value.setUsedInGroup(false);
+			library_ptr->value.updateSongGroupPointer(NULL);
+			return;
+		}
+		/*while(current->m_song!=library_ptr)
+		{
+			current=current->next_song_ptr;
+		}*/
+		else if(current->next_song_ptr==NULL)
+		{
+			SongGroupNode* prev = current->prev_song_ptr;
+			prev->next_song_ptr=NULL;
+			delete current;
+			library_ptr->value.setUsedInGroup(false);
+			library_ptr->value.updateSongGroupPointer(NULL);
+		}
+		else if(current->prev_song_ptr==NULL)
+		{
+			current_head->value = current->next_song_ptr;
+			current->next_song_ptr->prev_song_ptr=NULL;
+			delete current;
+			library_ptr->value.setUsedInGroup(false);
+			library_ptr->value.updateSongGroupPointer(NULL);
+			
+		}
+		else
+		{
+			current->prev_song_ptr->next_song_ptr=current->next_song_ptr;
+			current->next_song_ptr->prev_song_ptr=current->prev_song_ptr;
+			delete current;
+			library_ptr->value.setUsedInGroup(false);
+			library_ptr->value.updateSongGroupPointer(NULL);
+		}
+		RecomputePrevByYear(current_head);
+	}
+
+}
+
+/*
+ARGUMENTS:
+-song_groups points to a singly-linked list of song group heads
+-list_ptr1 contains to the song group head of Group A
+-list_ptr2 contains the song group head of Group B
+BEHAVIOR:
+Modify Group A so that at the end of its songs, the songs of Group B are added in the same
+order they were found in Group B. Remove the now-empty Group B.
+RETURN:
+None
+*/
+void CombineGroups(GroupListNode*& song_groups, GroupListNode*& list_ptr1, GroupListNode*& list_ptr2)
+{
+	SongGroupNode* a_back = list_ptr1->value;
+	//while(a_back->
+
+}
+
+/*
+ARGUMENTS:
+-song_groups points to a singly-linked list of song group heads
+-list_ptr is the head of the song group we want to remove.
+BEHAVIOR:
+Remove the group from the list of song groups. No Song objects should remain associated with the
+group, and the function should modify Song member variables appropriately to reflect this. Any
+memory associated with the group must be released.
+RETURN:
+None
+*/
+void RemoveGroup(GroupListNode*& song_groups, GroupListNode* list_ptr)
+{
+	
+
+
+}
+
+/*
+ARGUMENTS:
+-list_ptr is the head of the song group we want to add the song to.
+BEHAVIOR:
+Recompute all prev_by_year_ptr members in the song group pointed to by
+list_ptr.
+RETURN:
+None
+*/
+void RecomputePrevByYear(GroupListNode* list_ptr)
+{
+	SongGroupNode* start = list_ptr -> value;
+	SongGroupNode* end;
+	SongGroupNode* temp;
+	while(start -> next_song_ptr)
+	{
+		start->prev_by_year_ptr=NULL;
+		start= start->next_song_ptr;
+		
+	}
+	start->prev_by_year_ptr=NULL;
+	end = start;
+	while(end->prev_song_ptr)
+	{
+		temp = end;
+		while(temp->prev_song_ptr)
+		{
+			temp=temp->prev_song_ptr;
+			if((end->m_song->value.getYear())>(temp->m_song->value.getYear()))
+			{
+				end->prev_by_year_ptr=temp;
+				break;
+			}
+			else if(temp->prev_song_ptr==NULL)
+			{
+				end->prev_by_year_ptr = NULL;
+			}
+			
+		}
+		end = end->prev_song_ptr;
+		
+	}
+}
+
+////////////////////////////PRINT FUNCTIONS////////////////////////////////////
+
+/*
+ARGUMENTS:
+-library_head points to the first LibraryNode* of the song library
+-print_file points to an ostream to print output to
+BEHAVIOR:
+Print each song in the library in the order it was added.
+RETURN:
+None
+*/
+void PrintLibrary(LibraryNode* library_head,std::ostream& print_file)
+{
+	unsigned int count = 0;
+	LibraryNode* current = library_head;
+	while(current)
+	{
+		count++;
+		print_file << current->value;
+		current = current->ptr;
+	}
+	print_file<<"Library contains "<<count<<" song(s)"<<std::endl;
+}
+
+/*
+ARGUMENTS:
+-group_head points to the first SongGroupNode* of the group to print
+-print_file points to an ostream to print output to
+BEHAVIOR:
+Print each song in the group in the order it was added.
+RETURN:
+None
+*/
+void PrintGroupSequential(SongGroupNode* group_head,std::ostream& print_file)
+{
+	unsigned int count = 0;
+	SongGroupNode* temp = group_head;
+	GroupID gid = temp->id;
+	print_file<<"List ID "<<gid<<" contains:"<<std::endl;	
+	while(temp->m_song&&temp)
+	{
+		count++;
+		print_file<< temp->m_song->value;
+		if(!temp->next_song_ptr)
+		{
+			break;
+		}
+		temp=temp->next_song_ptr;
+	}
+	print_file<<count<<" song(s)"<<std::endl;
+}
+
+/*
+ARGUMENTS:
+-group_ptr points to the location in a particular song group to start printing from
+-print_file points to an ostream to print output to
+BEHAVIOR:
+Print a rewind list by following the prev_by_year_ptr pointers, starting from the song
+pointed to by group_ptr.
+RETURN:
+None
+*/
+void PrintGroupRewind(SongGroupNode* group_ptr,std::ostream& print_file)
+{
+	
+	unsigned int count = 1;
+	SongGroupNode* current = group_ptr;
+	print_file<<"Rewind list for "<<current->m_song->value.getYear()<<std::endl;
+	while(current!=NULL)
+	{
+		print_file<<"\t#"<<count<<":"<<" "<<current->m_song->value;
+		current=current->prev_by_year_ptr;
+		count++;
+	}
+	print_file<<"Rewind list contained "<<count-1<<" song(s)"<<std::endl;
+}
+
+/*
+ARGUMENTS:
+-group_ptr points to the location in a particular song group to start printing from
+-print_file points to an ostream to print output to
+BEHAVIOR:
+Print a rewind list by following the next_by_artist_ptr pointers, starting from the song
+pointed to by group_ptr.
+RETURN:
+None
+*/
+void PrintGroupMarathon(SongGroupNode* group_ptr,std::ostream& print_file)
+{
+	SongGroupNode* current = group_ptr;
+	unsigned int count=0;
+	print_file<<"Marathon list for "<<(group_ptr->m_song->value.getArtist())<<std::endl;
+	while(current!=NULL)
+	{
+		count++;
+		print_file <<"\t#"<<count<<": "<<(group_ptr->m_song->value);
+		current=current->next_by_artist_ptr;
+	}
+	print_file<<"Marathon list contained "<<count<<" song(s)."<<std::endl;
+}
+
+/*
+ARGUMENTS:
+-group_head points to the first SongGroupNode* of the group to analyze
+-print_file points to an ostream to print output to
+BEHAVIOR:
+Find the rewind list with the most songs in the song group pointed to by group_head.
+Print the rewind list and the song count to print_file.
+RETURN:
+None
+*/
+void PrintLongestGroupRewind(GroupListNode* group_head,std::ostream& print_file)
+{
+	RecomputePrevByYear(group_head);
+	SongGroupNode* start = group_head->value;
+	SongGroupNode* end = NULL;
+	SongGroupNode* current = start;
+	unsigned int maxC = 0;
+	unsigned int currentC = 0;
+	SongGroupNode* max_ptr;
+	while(current->next_song_ptr!=NULL)
+	{
+		current = current->next_song_ptr;
+	}
+	end = current;
+	while(end->prev_song_ptr!=NULL)
+	{
+		while(current->prev_by_year_ptr!=NULL)
+		{
+			currentC++;
+			current=current->prev_by_year_ptr;
+		}
+		if(currentC>maxC)
+		{
+			maxC=currentC;
+			max_ptr = end;
+			currentC=0;
+		}
+		end=end->prev_song_ptr;
+		current=end;
+	}
+	print_file<<"Maximum size rewind list is for year "<<(max_ptr->m_song->value.getYear())<<std::endl;
+	current = max_ptr;
+	unsigned int count = 1;
+	while(current!=NULL)
+	{
+		print_file<<"\t#"<<count<<":"<<" "<<current->m_song->value;
+		current=current->prev_by_year_ptr;
+		count++;
+	}
+	print_file<<"Longest rewind list contained "<<maxC+1<<" song(s)."<<std::endl;
+
+}
+
+///////////////////////////////CLEANUP/////////////////////////////////////////
+
+/*
+ARGUMENTS:
+-song_groups points to a singly-linked list of song group heads
+BEHAVIOR:
+Delete every group. Do not leak. Modifies all groups and the song_groups list.
+Update every Song to reflect not being in a group.
+RETURN:
+None
+*/
+void DeleteAllSongGroups(GroupListNode*& song_groups)
+{
+	if(song_groups)
+	{
+		DeleteSongGroup(song_groups->value);
+		GroupListNode* next = song_groups->ptr;
+		delete song_groups;
+		DeleteAllSongGroups(next);
+	}
+}
+
+void DeleteSongGroup(SongGroupNode*& group)
+{
+	if(group)
+	{
+		if(group->m_song)
+		{
+			group->m_song->value.setUsedInGroup(false);
+			group->m_song->value.updateSongGroupPointer(NULL);
+		}
+		SongGroupNode* next = group->next_song_ptr;
+		delete group;
+		DeleteSongGroup(next);
+	}
+}
