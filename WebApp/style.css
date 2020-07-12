@@ -1,0 +1,195 @@
+/* HEADER LOGO */
+
+header {
+    position: relative;
+    text-align: center;
+    margin: auto;
+}
+
+header .logo {
+    height: 235px;
+}
+
+header .page-title {
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 60px;
+    color: black;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+h1 {
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 30px;
+    color: black;
+}
+
+
+/* LOGIN PAGE */
+
+#unauthenticated {
+    display: block;
+    margin: auto;
+    padding: 0;
+    height: 290px;
+    width: 300px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 15%;
+}
+
+.login {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    list-style-type: none;
+    padding: 0;
+    padding-top: 48px;
+}
+
+.row {
+    display: flex;
+    margin: auto;
+    padding: 0;
+    height: 60px;
+    width: 240px;
+}
+
+input[type="text"], input[type="password"] {
+    border: none;
+    border-bottom: 1px solid #a5a3a3;
+    height: 40px;
+    width: 100%;
+    text-align: center;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+    font-size: 14px;
+}
+
+input[type="submit"] {
+    border: none;
+    margin-top: 12px;
+    width: 100%;
+    cursor: pointer;
+    background-color: black;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+    font-size: 14px;
+    color: white;
+}
+
+
+/* DIARY PAGE */
+
+#authenticated {
+    display: none;
+    margin: auto;
+    padding: 0;
+    width: 600px;
+    height: auto;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 4%;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    padding-top: 4%;
+    padding-bottom: 5%;
+    width: 600px;
+    height: auto;
+}
+
+#new-entry {
+    display: flex;
+    flex-direction: column;
+    width: 550px;
+    margin: auto;
+}
+
+#new-entry--title {
+    display: flex;
+    justify-content: center;
+}
+
+#new-entry--buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: -10px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-right: 32px;
+}
+
+.food-buttons {
+    margin: 0;
+    padding: 3px;
+    list-style-type: none;
+}
+
+button[type="button"] {
+    border: none;
+    border-radius: 3px;
+    padding: 8px 24px;
+    width: 100%;
+    cursor: pointer;
+    background-color: black;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+    font-size: 12px;
+    color: white;
+}
+
+#new-entry--summary {
+    display: flex;
+    justify-content: center;
+}
+
+#view-entries {
+    display: flex;
+    flex-direction: column;
+    margin-top: 16px;
+    width: 550px;
+    margin: auto;
+}
+
+#view-entries--title {
+    display: flex;
+    justify-content: center;
+}
+
+#view-entries--diary {
+    display: flex;
+    justify-content: center;
+}
+
+
+/* BOOTSTRAP TABLE STYLE */
+
+.table {
+    border-collapse: collapse;
+    text-align: center;
+    width: 500px;
+	margin-bottom: 1rem;
+    background-color: transparent;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+}
+
+.table td, .table th {
+	padding: .75rem;
+	border-top: 1px solid #dee2e6
+}
+
+.table tbody+tbody {
+	border-top: 2px solid #dee2e6
+}
+
+.col {
+	-ms-flex-preferred-size: 0;
+	flex-basis: 0;
+	-ms-flex-positive: 1;
+	flex-grow: 1;
+	max-width: 100%
+}

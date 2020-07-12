@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="owners" content="Lynette Lopez & Anthony Romano" />
+    <meta name="description" content="Final Group Project for CSE 383" />
+    <title>Food Diary</title>
+
+    <!-- External Files -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="script.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Fjalla+One" rel="stylesheet" />
+  </head>
+  <body>
+    <header>
+      <img class="logo" src="logo.jpg" alt="graphic of a cheeseburger" />
+      <div class="page-title">FOOD DIARY</div>
+    </header>
+    <main>
+      <div id="unauthenticated">
+        <form method="post" action="rest.php/v1/user" id="login-form">
+          <ul class="login">
+            <li class="row">
+              <input type="text" name="Username" id="username" placeholder="Username" />
+            </li>
+            <li class="row">
+              <input type="password" name="Password" id="password" placeholder="Password" />
+            </li>
+            <li class="row">
+              <input type="submit" id="login-submit" value="Sign In" />
+            </li>
+          </ul>
+        </form>
+      </div>
+      <div id="authenticated">
+        <div class="wrapper">
+          <div id="new-entry">
+            <div id="new-entry--title"><h1>MAKE A NEW ENTRY</h1></div>
+            <ul id="new-entry--buttons"></ul>
+            <div id="new-entry--summary">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Count</th>
+                  </tr>
+                </thead>
+                <tbody id="new-entry--table-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div id="view-entries">
+            <div id="view-entries--title"><h1>VIEW PAST ENTRIES</h1></div>
+            <div id="view-entries--diary">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Time Eaten</th>
+                  </tr>
+                </thead>
+                <tbody id="view-entries--table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <br /><br />
+  </body>
+</html>
